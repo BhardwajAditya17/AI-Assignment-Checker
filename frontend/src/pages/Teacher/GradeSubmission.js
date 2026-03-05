@@ -134,7 +134,7 @@ const GradeSubmission = () => {
                   {sub.student?.name || "Student Submission"}
                 </h2>
                 <p className="text-sm text-gray-500 font-medium mt-1 flex items-center gap-2">
-                  <FileText size={14} /> {sub.assignment?.title || "Assignment Review"}
+                  <FileText size={14} /> {sub.question?.title || "Assignment Review"}
                 </p>
               </div>
             </div>
@@ -220,7 +220,7 @@ const GradeSubmission = () => {
                 
                 <div className="flex items-end gap-3 mb-4">
                   <div className="text-5xl font-black leading-none">{sub.aiAnalysis?.score || 0}</div>
-                  <div className="text-xl text-indigo-300 font-bold mb-1">/ {sub.assignment?.maxMarks || 100}</div>
+                  <div className="text-xl text-indigo-300 font-bold mb-1">/ {sub.question?.maxMarks || 100}</div>
                 </div>
                 
                 <div className="bg-white/10 p-4 rounded-xl backdrop-blur-sm border border-white/10">
@@ -263,7 +263,7 @@ const GradeSubmission = () => {
                       placeholder="0"
                     />
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 font-bold">
-                      / {sub.assignment?.maxMarks || 100}
+                      / {sub.question?.maxMarks || 100}
                     </div>
                   </div>
                 </div>
