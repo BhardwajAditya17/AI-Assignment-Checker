@@ -3,7 +3,7 @@ import axios from "axios";
 
 // Fallback added in case REACT_APP_API_URL is missing
 const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5002";
-const API_URL = `${BASE_URL}/api/submissions`;
+const API_URL = `${BASE_URL}/submissions`;
 
 // Centralized auth header generation
 const getAuthHeader = () => {
