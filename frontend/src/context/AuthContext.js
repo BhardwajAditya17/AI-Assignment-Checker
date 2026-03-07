@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }) => {
   // Login function
   const login = async (credentials) => {
     const data = await loginUser(credentials);
+    console.log("THE RAW API RESPONSE:", data);
 
     if (data.token) {
       localStorage.setItem("token", data.token);
