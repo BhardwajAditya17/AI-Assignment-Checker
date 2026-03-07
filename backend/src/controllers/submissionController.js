@@ -3,74 +3,77 @@ const Submission = require("../models/Submission");
 const Question = require("../models/Question");
 const axios = require("axios");
 const path = require("path");
+const supabase = require("../config/supabase");
 
 // ==========================================
 // 1. STUDENT: Submit Assignment + AI Grading
 // ==========================================
 exports.submitAnswer = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: "File upload is required" });
-    }
+    if (!req.file) return res.status(400).json({ message: "File upload is required" });
 
     const { assignmentId } = req.body;
-    const studentFile = req.file; 
-
-    // ✅ FIX 1: Safely get the student ID. Handles both 'id' and '_id' from JWT payloads.
     const studentId = req.user._id || req.user.id;
-    if (!studentId) {
-      return res.status(401).json({ message: "Unauthorized: Missing User ID" });
-    }
 
-    if (!assignmentId) {
-        return res.status(400).json({ message: "Assignment ID is required" });
-    }
-
-    // 1. Fetch the Question
     const question = await Question.findById(assignmentId);
-    if (!question) {
-        return res.status(404).json({ message: "Question not found" });
-    }
+    if (!question) return res.status(404).json({ message: "Question not found" });
 
-    // 2. Prepare the payload for Python AI
-    const aiPayload = {
-        student_file_path: path.resolve(studentFile.path),
-        question_description: question.description || question.title || "No description provided",
-        max_marks: question.maxMarks || 100
-    };
+    // --- 1. UPLOAD DIRECTLY TO SUPABASE FIRST ---
+    const cleanFileName = req.file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, "");
+    const supabaseFileName = `${Date.now()}_${cleanFileName}`;
 
-    if (question.referenceFile) {
-        aiPayload.reference_file_path = path.resolve(question.referenceFile);
-    }
+    const { error: uploadError } = await supabase.storage
+      .from('submissions')
+      .upload(supabaseFileName, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: false
+      });
 
-    // 3. Call Python AI Service
+    if (uploadError) throw new Error("Supabase upload failed");
+
+    // Get the Cloud URL
+    const { data: urlData } = supabase.storage
+      .from('submissions')
+      .getPublicUrl(supabaseFileName);
+      
+    const finalFileUrl = urlData.publicUrl;
+
+    // --- 2. SEND THE URL TO PYTHON AI ---
     let aiData = {};
+    const aiPayload = {
+      student_file_url: finalFileUrl, // ✅ Passing the Supabase URL!
+      question_description: question.description || question.title || "No description",
+      max_marks: question.maxMarks || 100
+    };
+    
+    // If you've also moved teacher reference files to Supabase, pass that URL too:
+    if (question.referenceFile) aiPayload.reference_file_url = question.referenceFile;
+
     try {
-        console.log("🤖 Sending data to AI Grader...");
-        const aiResponse = await axios.post('http://127.0.0.1:8000/analyze', aiPayload);
-        aiData = aiResponse.data;
-        console.log("✅ AI Grading Complete! Score:", aiData.score);
+      console.log("🤖 Sending cloud URL to AI Grader...");
+      const aiResponse = await axios.post('http://127.0.0.1:8000/analyze', aiPayload);
+      aiData = aiResponse.data;
     } catch (aiError) {
-        console.error("⚠️ AI Service Failed (Saving submission anyway):", aiError.message);
+      console.error("⚠️ AI Service Failed:", aiError.message);
     }
 
-    // 4. Save to MongoDB
-    // ✅ FIX 2: Explicitly save obtainedMarks and aiAnalysis so the grade persists
+    // --- 3. SAVE TO MONGODB ---
     const submissionData = {
-        student: studentId, 
-        question: assignmentId,
-        fileUrl: studentFile.path, 
-        obtainedMarks: aiData.score !== undefined ? aiData.score : null,
-        aiAnalysis: Object.keys(aiData).length > 0 ? aiData : null,
-        feedback: aiData.feedback || "Pending Teacher Review"
+      student: studentId, 
+      question: assignmentId,
+      fileUrl: finalFileUrl, 
+      obtainedMarks: aiData.score !== undefined ? aiData.score : null,
+      aiAnalysis: Object.keys(aiData).length > 0 ? aiData : null,
+      feedback: aiData.feedback || "Pending Teacher Review",
+      status: Object.keys(aiData).length > 0 ? "AI-Graded" : "Pending"
     };
 
     const submission = await Submission.create(submissionData);
     res.status(201).json(submission);
 
   } catch (error) {
-     console.error("Submission Error:", error);
-     res.status(500).json({ message: "Failed to submit assignment" });
+    console.error("Submission Error:", error);
+    res.status(500).json({ message: "Failed to submit assignment" });
   }
 };
 

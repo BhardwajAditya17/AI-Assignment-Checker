@@ -11,7 +11,6 @@ export const createQuestion = async (formData) => {
     {
       headers: {
         Authorization: `Bearer ${token}`, 
-        "Content-Type": "multipart/form-data", // Required for referenceFile uploads
       },
     }
   );

@@ -1,29 +1,16 @@
 const multer = require("multer");
 const path = require("path");
-const fs = require("fs");
 
-// Ensure 'uploads' directory exists
-const uploadDir = "uploads/";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
-
-// Configure Storage
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); 
-  },
-  filename: function (req, file, cb) {
-    // Save as: fieldname-timestamp.pdf
-    cb(null, file.fieldname + "-" + Date.now() + path.extname(file.originalname));
-  },
-});
+// ✅ FIX: Switch to Memory Storage so req.file.buffer is populated!
+const storage = multer.memoryStorage();
 
 // File Filter (Accept PDF and Word Docs)
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /pdf|doc|docx|msword|application\/vnd.openxmlformats-officedocument.wordprocessingml.document/;
   
+  // Checking extension
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  // Checking mimetype
   const mimetype = allowedTypes.test(file.mimetype);
 
   if (extname) {
@@ -35,8 +22,10 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ 
   storage: storage,
-  fileFilter: fileFilter 
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024 // Optional but highly recommended: 10MB limit to protect your RAM
+  }
 });
 
-// Export directly
 module.exports = upload;
