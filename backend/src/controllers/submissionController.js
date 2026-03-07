@@ -51,7 +51,7 @@ exports.submitAnswer = async (req, res) => {
 
     try {
       console.log("🤖 Sending cloud URL to AI Grader...");
-      const aiResponse = await axios.post('http://127.0.0.1:8000/analyze', aiPayload);
+      const aiResponse = await axios.post('process.env.AI_SERVICE_URL/analyze', aiPayload);
       aiData = aiResponse.data;
     } catch (aiError) {
       console.error("⚠️ AI Service Failed:", aiError.message);
