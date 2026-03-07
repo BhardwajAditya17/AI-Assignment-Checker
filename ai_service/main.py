@@ -60,13 +60,13 @@ async def analyze_submission(data: GradeRequest):
     
     percentage = 0.0
     
-    if similarity > 0.85:
+    if similarity > 0.7:
         percentage = 1.0
-    elif similarity < 0.2:
-        percentage = 0.0
+    # elif similarity < 0.2:
+    #     percentage = 0.0
     else:
         # Normalize the score between 0 and 1 based on the range 0.2 -> 0.85
-        percentage = (similarity - 0.2) / (0.85 - 0.2)
+        percentage = (similarity) / (0.6)
 
     # Calculate final marks based on Teacher's Max Marks
     awarded_marks = percentage * data.max_marks
