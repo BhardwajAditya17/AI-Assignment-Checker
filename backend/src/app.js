@@ -97,8 +97,8 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads"), {
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/questions", questionRoutes);
-app.use("/api/submissions", submissionRoutes);
-app.use("/api/classes", classRoutes);
+app.use("/api/v1/submissions", submissionRoutes);
+app.use("/api/v1/classes", classRoutes);
 
 /* =========================================
    HEALTH CHECK ROUTE
