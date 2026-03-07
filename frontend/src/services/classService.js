@@ -1,6 +1,9 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:5002/api/classes";
+// 1. Use the environment variable, fallback to localhost for local testing
+// Assuming your REACT_APP_API_URL is set to "https://your-backend.onrender.com/api" (or /api/v1)
+const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5002/api";
+const API_URL = `${BASE_URL}/classes`;
 
 const getAuthHeader = () => {
   const token = localStorage.getItem("token");
@@ -24,11 +27,11 @@ export const getClassById = async (id) => {
 };
 
 export const joinClass = async (joinCode) => {
-  const token = localStorage.getItem("token");
+  // 2. Replaced the hardcoded localhost string here too!
   const response = await axios.post(
-    `http://localhost:5002/api/classes/join`, 
+    `${API_URL}/join`, 
     { code: joinCode },
-    { headers: { Authorization: `Bearer ${token}` } }
+    getAuthHeader() 
   );
   return response.data;
 };
