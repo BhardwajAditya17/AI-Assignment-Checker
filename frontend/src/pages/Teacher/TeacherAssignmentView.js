@@ -114,8 +114,14 @@ const TeacherAssignmentView = () => {
     );
   }
 
-  // File Preview Logic
-  const fileUrl = assignment.fileUrl ? `${API_BASE_URL}/${assignment.fileUrl}` : null;
+  // ✅ NEW HELPER LOGIC: Safely Construct File URL
+  const getFileUrl = (filePath) => {
+    if (!filePath) return null;
+    if (filePath.startsWith("http")) return filePath; // It's already a full Supabase link!
+    return `${API_BASE_URL}/${filePath}`; // Fallback for old local files
+  };
+
+  const fileUrl = getFileUrl(assignment.fileUrl);
   const isPdf = assignment.fileUrl?.toLowerCase().endsWith(".pdf");
 
   return (

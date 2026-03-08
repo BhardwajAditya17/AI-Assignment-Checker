@@ -105,8 +105,14 @@ const GradeSubmission = () => {
     );
   }
 
-  // Construct File URL
-  const fileUrl = sub.fileUrl ? `${API_BASE_URL}/${sub.fileUrl}` : null;
+  // ✅ NEW HELPER LOGIC: Safely Construct File URL
+  const getFileUrl = (filePath) => {
+    if (!filePath) return null;
+    if (filePath.startsWith("http")) return filePath; // It's already a full Supabase link!
+    return `${API_BASE_URL}/${filePath}`; // Fallback for old local files
+  };
+
+  const fileUrl = getFileUrl(sub.fileUrl);
   const isPdf = sub.fileUrl?.toLowerCase().endsWith(".pdf");
 
   return (

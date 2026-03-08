@@ -46,8 +46,15 @@ const StudentAssignmentView = () => {
   if (loading) return <div className="p-10 text-center font-bold text-gray-500">Loading Assignment Details...</div>;
   if (!assignment) return <div className="p-10 text-center text-red-500">Assignment not found.</div>;
 
+  // ✅ NEW HELPER LOGIC: Safely Construct File URL
+  const getFileUrl = (filePath) => {
+    if (!filePath) return null;
+    if (filePath.startsWith("http")) return filePath; // It's already a full Supabase link!
+    return `${API_BASE_URL}/${filePath}`; // Fallback for old local files
+  };
+
   // We only preview the SUBMISSION file
-  const fileUrl = submission?.fileUrl ? `${API_BASE_URL}/${submission.fileUrl}` : null;
+  const fileUrl = getFileUrl(submission?.fileUrl);
   const isPdf = fileUrl?.toLowerCase().endsWith(".pdf");
 
   return (
